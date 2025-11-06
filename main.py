@@ -37,12 +37,14 @@ DEVICE          = "cuda" if torch.cuda.is_available() else "cpu" # explanation: 
 MAX_INPUT_TOKENS = int(os.getenv("MAX_INPUT_TOKENS", "256"))    # explanation: safe max length to tokenize inputs
 
 # explanation: Add CORS middleware so browsers/apps from other domains can call this API
+from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS != ["*"] else ["*"],  # explanation: open in dev, lock down in prod
-    allow_credentials=True,
-    allow_methods=["*"],           # explanation: allow all HTTP methods (GET/POST/PUT/DELETE)
-    allow_headers=["*"],           # explanation: allow all custom headers
+    allow_origins=["*"],          # allow all external domains
+    allow_origin_regex=".*",      # allow PWA / Appilix (Origin=null)
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=False,      # IMPORTANT: must be False when allow_origins=["*"]
 )
 
 # explanation: Map (source_lang, target_lang) to a specific pretrained translation model
@@ -345,3 +347,4 @@ def translate(req: TranslationRequest):
     # explanation: For unexpected errors, return a 500 with message
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Translation failed: {e}")
+
